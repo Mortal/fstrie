@@ -35,11 +35,15 @@ Example
 -------
 
 ```
-$ git clone https://github.com/Mortal/fstrie
-$ cd fstrie
-$ make wheel
-$ pip install --user py/dist/fstrie-*.whl
+$ pip install --user https://github.com/Mortal/fstrie/releases/download/v0.1.0/fstrie-0.1.0-py2.py3-none-manylinux1_x86_64.whl
 $ sort /etc/passwd > passwd.txt
 $ python3 -m fstrie passwd.txt nobody
 x:99:99:nobody:/:/usr/bin/nologin
 ```
+
+Building with Docker
+--------------------
+
+Remove `target` (containing Cargo's output) and `py/build`, `py/dist`,
+`py/fstrie.egg-info`, `py/.eggs` (containing setup.py's output) before running
+`make wheel-manylinux`.
