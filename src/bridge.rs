@@ -1,9 +1,20 @@
-use std::{fmt, mem, panic, result};
+use std::{fmt, mem, panic, result, ptr};
 use std::os::raw::{c_uint, c_int};
 
+static mut PANIC_INFO: Option<String> = None;
+
 // From https://youtu.be/zmtHaZG7pPc?t=21m29s
-fn silent_panic_handler(_pi: &panic::PanicInfo) {
-    /* noop */
+fn silent_panic_handler(pi: &panic::PanicInfo) {
+    let pl = pi.payload();
+    let payload = if let Some(s) = pl.downcast_ref::<&str>() { s }
+    else { "?" };
+    let position = if let Some(p) = pi.location() {
+        format!("At {}:{}: ", p.file(), p.line())
+    }
+    else { "".to_owned() };
+    unsafe {
+        PANIC_INFO = Some(format!("{}{}", position, payload));
+    }
 }
 
 #[no_mangle]
@@ -22,6 +33,7 @@ pub struct CError {
 #[derive(Debug)]
 enum ErrorKind {
     InternalError,
+    OddError,
 }
 
 #[derive(Debug)]
@@ -41,6 +53,7 @@ impl Error {
     fn get_error_code(&self) -> c_uint {
         match self.kind {
             ErrorKind::InternalError => 1,
+            ErrorKind::OddError => 2,
         }
     }
 }
@@ -57,7 +70,14 @@ unsafe fn set_err(err: Error, err_out: *mut CError) {
     if err_out.is_null() {
         return;
     }
-    let s = format!("{}\x00", err);
+    let s = match err.kind {
+        ErrorKind::InternalError =>
+            match &PANIC_INFO {
+                &Some(ref s) => format!("{}\x00", s),
+                &None => "no panic info\x00".to_owned(),
+            },
+        _ => format!("{}\x00", err),
+    };
     (*err_out).message = Box::into_raw(s.into_boxed_str()) as *mut u8;
     (*err_out).code = err.get_error_code();
     (*err_out).failed = 1;
@@ -94,6 +114,15 @@ export!(lsm_view_dump_memdb(
     view: *mut View, len_out: *mut c_uint, with_source_contents: c_int,
     with_names: c_int) -> Result<*mut u8>
 {
+    if view != ptr::null_mut() {
+        panic!("Expected nullptr");
+    }
+    if with_source_contents == 42 {
+        panic!("Such a number!");
+    }
+    if with_source_contents * with_names % 2 == 1 {
+        return Err(ErrorKind::OddError.into());
+    }
     /*
     let memdb = (*view).dump_memdb(DumpOptions {
         with_source_contents: with_source_contents != 0,
@@ -103,4 +132,9 @@ export!(lsm_view_dump_memdb(
     let memdb = "Hello world!".as_bytes().to_owned();
     *len_out = memdb.len() as c_uint;
     Ok(Box::into_raw(memdb.into_boxed_slice()) as *mut u8)
+});
+
+export!(lsm_buffer_free(buf: *mut u8) -> Result<c_int> {
+    Box::from_raw(buf);
+    Ok(0)
 });
