@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::path::PathBuf;
 use std::io::{Read, BufRead, BufReader, Seek, SeekFrom};
-//use std::str::from_utf8;
 use err::{ErrorKind, Result};
 
 pub struct Database {
@@ -19,14 +18,6 @@ struct BlockSearcher {
 
 impl BlockSearcher {
     fn new(mut file: File, block_size: usize) -> Result<Self> {
-        /*
-        {
-            let mut buf = vec![b'\x00'];
-            file.seek(SeekFrom::Start(0)).unwrap();
-            println!("{:?}", file.read(&mut buf));
-            println!("{:?}", &buf);
-        }
-        */
         let nbytes = file.seek(SeekFrom::End(0))?;
         let mut buf = Vec::new();
         buf.resize(block_size, b'\x00');
@@ -56,13 +47,11 @@ impl BlockSearcher {
     }
 
     fn lower(&mut self) {
-        //println!("Go lower");
         self.hi = self.mid();
     }
 
     fn higher(&mut self) {
         self.lo = self.mid() + 1;
-        //println!("Go higher {} {}", self.lo, self.hi);
     }
 
     fn trimmed(&self) -> &[u8] {
@@ -107,13 +96,7 @@ impl BlockSearcher {
         let i = self.buf.iter().position(|c| *c == b'\n').unwrap() as u64;
         let mid = self.mid();
         let pos = mid * (self.block_size as u64) + i + 1;
-        //println!("Pos={}", pos);
         self.file.seek(SeekFrom::Start(pos)).unwrap();
-        /*
-        let mut buf = vec![b'\x00'];
-        println!("{:?}", self.file.read(&mut buf));
-        println!("{:?}", &buf);
-        */
         Ok(self.file)
     }
 }
@@ -152,13 +135,8 @@ impl Database {
         let mut searcher = BlockSearcher::new(file, (2 as usize).pow(16))?;
         let needle = format!("{}:", key).as_bytes().to_owned();
         while !searcher.done() {
-            //let mid = searcher.mid();
-            //println!("Read block {}", mid);
             let (i, l_len) = {
                 let l = searcher.read()?.split(|c| *c == b'\n').collect::<Vec<_>>();
-                //println!("Read block {} (from {})",
-                //         mid,
-                //         from_utf8(&l[0]).unwrap());
                 (match l.binary_search(&&needle[..]) {
                     Ok(i) => i,
                     Err(i) => i,
@@ -171,7 +149,6 @@ impl Database {
             } else {
                 break;
             }
-            //println!("Next iteration!");
         }
         let mut file = BufReader::new(searcher.into_inner()?);
         let mut buf = Vec::new();
@@ -180,7 +157,6 @@ impl Database {
             if buf.starts_with(&needle) {
                 result.push(buf[needle.len()..buf.len()-1].to_owned());
             } else if buf.gt(&needle) {
-                //println!("Stop at {}", from_utf8(&buf).unwrap());
                 break;
             }
             buf.clear();
