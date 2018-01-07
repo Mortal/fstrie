@@ -32,8 +32,9 @@ Example
 ```
 $ git clone https://github.com/Mortal/fstrie
 $ cd fstrie
-$ cargo build
+$ make wheel
+$ pip install --user py/dist/fstrie-*.whl
 $ sort /etc/passwd > passwd.txt
-$ python3 py/fstrietest.py passwd.txt nobody
+$ python3 -m fstrie passwd.txt nobody
 x:99:99:nobody:/:/usr/bin/nologin
 ```
