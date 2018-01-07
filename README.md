@@ -25,6 +25,7 @@ Prerequisites
 * Python
 * Python cffi module
 * Python wheel module
+* libffi
 * Rust and Cargo
 
 Ubuntu's Rust 1.17 is too old; use [rustup](https://www.rustup.rs/)
