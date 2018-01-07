@@ -24,6 +24,7 @@ Prerequisites
 
 * Python
 * Python cffi module
+* Python wheel module
 * Rust and Cargo
 
 Example
