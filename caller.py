@@ -11,7 +11,7 @@ typedef struct lsm_error_s {
     int code;
 } lsm_error_t;
 
-void mylib_init();
+void fstrie_init();
 
 char *lsm_view_dump_memdb(const lsm_view_t *view,
                           unsigned int *len_out,
@@ -19,10 +19,10 @@ char *lsm_view_dump_memdb(const lsm_view_t *view,
                           int with_names,
                           lsm_error_t *err);
 
-void lsm_buffer_free(char *);
+void fstrie_free(char *);
 """)
 _lib = _ffi.dlopen('target/debug/libfstrie.so')
-_lib.mylib_init()
+_lib.fstrie_init()
 
 
 class FstrieError(Exception):
@@ -53,7 +53,7 @@ def rustcall(func, *args):
         exc_class = special_errors.get(err[0].code, FstrieError)
         exc = exc_class(_ffi.string(err[0].message).decode('utf-8', 'replace'))
     finally:
-        _lib.lsm_buffer_free(err[0].message)
+        _lib.fstrie_free(err[0].message)
     raise exc
 
 
@@ -63,4 +63,4 @@ def lsm_view_dump_memdb(a, b):
     try:
         return _ffi.unpack(res_ptr, len_out[0])
     finally:
-        _lib.lsm_buffer_free(res_ptr)
+        _lib.fstrie_free(res_ptr)

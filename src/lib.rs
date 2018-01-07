@@ -1,12 +1,9 @@
+#[macro_use]
 mod bridge;
 mod err;
+mod cabi;
+mod fstrie;
 pub use bridge::*;
 pub use err::*;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub use cabi::*;
+pub use fstrie::*;
