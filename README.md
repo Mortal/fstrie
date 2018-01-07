@@ -41,6 +41,16 @@ $ python -m fstrie passwd.txt nobody
 x:99:99:nobody:/:/usr/bin/nologin
 ```
 
+You can also instantiate `fstrie.Database` in a `with`-statement as follows:
+
+```
+$ python
+>>> import fstrie
+>>> with fstrie.Database('passwd.txt') as db:
+...     print(db['nobody'])
+['x:99:99:nobody:/:/usr/bin/nologin']
+```
+
 Building with Docker
 --------------------
 
