@@ -69,15 +69,6 @@ def rustcall(func, *args):
     raise exc
 
 
-def lsm_view_dump_memdb(a, b):
-    len_out = _ffi.new('unsigned int *')
-    res_ptr = rustcall(_lib.lsm_view_dump_memdb, _ffi.NULL, len_out, a, b)
-    try:
-        return _ffi.unpack(res_ptr, len_out[0])
-    finally:
-        _lib.fstrie_free(res_ptr)
-
-
 class Database:
     def __init__(self, root):
         self._root = root
