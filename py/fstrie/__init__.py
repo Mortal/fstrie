@@ -1,29 +1,4 @@
-import os
-from cffi import FFI
-
-
-_ffi = FFI()
-_ffi.cdef("""
-/* From https://youtu.be/zmtHaZG7pPc?t=22m19s */
-typedef void fstrie_db_t;
-
-struct fstrie_error {
-    char *message;
-    int failed;
-    int code;
-};
-
-void fstrie_init();
-
-fstrie_db_t *fstrie_load(const char *root, struct fstrie_error *);
-void fstrie_unload(fstrie_db_t *, struct fstrie_error *);
-char **fstrie_lookup(fstrie_db_t *, const char *key, struct fstrie_error *);
-
-void fstrie_free(char *);
-void fstrie_free_list(char **);
-""")
-_lib = _ffi.dlopen(os.path.join(
-    os.path.dirname(__file__), '../target/debug/libfstrie.so'))
+from ._lowlevel import lib as _lib, ffi as _ffi
 _lib.fstrie_init()
 
 
@@ -47,7 +22,7 @@ class IOError(FstrieError):
     pass
 
 
-special_errors = {
+_special_errors = {
     1: InternalError,
     2: UnicodeDecodeError,
     3: RootDoesNotExistError,
@@ -56,13 +31,13 @@ special_errors = {
 
 
 # From https://youtu.be/zmtHaZG7pPc?t=22m29s
-def rustcall(func, *args):
+def _rustcall(func, *args):
     err = _ffi.new('struct fstrie_error *')
     rv = func(*(args + (err,)))
     if not err[0].failed:
         return rv
     try:
-        exc_class = special_errors.get(err[0].code, FstrieError)
+        exc_class = _special_errors.get(err[0].code, FstrieError)
         exc = exc_class(_ffi.string(err[0].message).decode('utf-8', 'replace'))
     finally:
         _lib.fstrie_free(err[0].message)
@@ -74,15 +49,15 @@ class Database:
         self._root = root
 
     def __enter__(self):
-        self._handle = rustcall(_lib.fstrie_load, self._root.encode('utf-8'))
+        self._handle = _rustcall(_lib.fstrie_load, self._root.encode('utf-8'))
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        rustcall(_lib.fstrie_unload, self._handle)
+        _rustcall(_lib.fstrie_unload, self._handle)
         del self._handle
 
     def __getitem__(self, key):
-        result_ptr = rustcall(_lib.fstrie_lookup, self._handle, key.encode('utf-8'))
+        result_ptr = _rustcall(_lib.fstrie_lookup, self._handle, key.encode('utf-8'))
         try:
             result = []
             i = 0

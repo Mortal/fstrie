@@ -1,0 +1,4 @@
+fstrie
+======
+
+A Python library for searching filesystem-backed tries.
