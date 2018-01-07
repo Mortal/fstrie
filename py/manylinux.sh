@@ -1,4 +1,7 @@
 #!/bin/sh
+# manylinux.sh based on https://github.com/getsentry/symbolic
+# This script should be invoked using `make wheel-manylinux`.
+
 set -e
 
 # Install dependencies needed by our wheel
