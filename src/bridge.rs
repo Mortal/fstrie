@@ -29,7 +29,7 @@ unsafe fn set_err(err: Error, err_out: *mut CError) {
         return;
     }
     let s = match err.kind {
-        ErrorKind::InternalError => get_panic(),
+        ErrorKind::Internal => get_panic(),
         _ => format!("{}\x00", err),
     };
     (*err_out).message = Box::into_raw(s.into_boxed_str()) as *mut u8;
@@ -65,7 +65,7 @@ pub unsafe fn landingpad<F: FnOnce() -> Result<T> + panic::UnwindSafe, T>(
     if let Ok(rv) = panic::catch_unwind(f) {
         rv.map_err(|err| set_err(err, err_out)).unwrap_or(mem::zeroed())
     } else {
-        set_err(ErrorKind::InternalError.into(), err_out);
+        set_err(ErrorKind::Internal.into(), err_out);
         mem::zeroed()
     }
 }

@@ -1,7 +1,7 @@
 use std::ptr;
-use std::os::raw::{c_int, c_uint};
-use err::ErrorKind;
-use fstrie::View;
+use std::os::raw::c_int;
+use std::ffi::CStr;
+use fstrie::Database;
 use bridge::*;
 
 export!(fstrie_free(buf: *mut u8) -> Result<c_int> {
@@ -9,27 +9,33 @@ export!(fstrie_free(buf: *mut u8) -> Result<c_int> {
     Ok(0)
 });
 
-// From https://youtu.be/zmtHaZG7pPc?t=22m14s
-export!(lsm_view_dump_memdb(
-    view: *mut View, len_out: *mut c_uint, with_source_contents: c_int,
-    with_names: c_int) -> Result<*mut u8>
-{
-    if view != ptr::null_mut() {
-        panic!("Expected nullptr");
+export!(fstrie_free_list(buf: *mut *mut u8) -> Result<c_int> {
+    let mut i = 0;
+    while *buf.offset(i) != ptr::null_mut() {
+        Box::from_raw(*buf.offset(i));
+        i += 1;
     }
-    if with_source_contents == 42 {
-        panic!("Such a number!");
+    Box::from_raw(buf);
+    Ok(0)
+});
+
+export!(fstrie_load(root: *const i8) -> Result<*mut Database> {
+    Ok(Box::into_raw(Box::new(Database::new(CStr::from_ptr(root).to_str()?)?)) as *mut Database)
+});
+
+export!(fstrie_unload(db: *mut Database) -> Result<c_int> {
+    Box::from_raw(db);
+    Ok(0)
+});
+
+export!(fstrie_lookup(db: *mut Database, key: *const i8) -> Result<*mut *mut i8> {
+    let r_vec = (*db).lookup(CStr::from_ptr(key).to_str()?)?;
+    let mut r_ptrs = Vec::new();
+    for mut r in r_vec {
+        r.push(b'\x00');
+        r_ptrs.push(
+            Box::into_raw(r.into_boxed_slice()) as *mut i8);
     }
-    if with_source_contents * with_names % 2 == 1 {
-        return Err(ErrorKind::OddError.into());
-    }
-    /*
-    let memdb = (*view).dump_memdb(DumpOptions {
-        with_source_contents: with_source_contents != 0,
-        with_names: with_names != 0,
-    })?;
-    */
-    let memdb = "Hello world!".as_bytes().to_owned();
-    *len_out = memdb.len() as c_uint;
-    Ok(Box::into_raw(memdb.into_boxed_slice()) as *mut u8)
+    r_ptrs.push(ptr::null_mut());
+    Ok(Box::into_raw(r_ptrs.into_boxed_slice()) as *mut *mut i8)
 });

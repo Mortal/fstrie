@@ -1,10 +1,12 @@
-use std::{result, fmt};
+use std::{result, fmt, str, io};
 use std::os::raw::c_uint;
 
 #[derive(Debug)]
 pub enum ErrorKind {
-    InternalError,
-    OddError,
+    Internal,
+    UnicodeDecode(str::Utf8Error),
+    RootNotDir,
+    Io(io::Error),
 }
 
 #[derive(Debug)]
@@ -13,6 +15,18 @@ pub struct Error {
 }
 
 pub type Result<T> = result::Result<T, Error>;
+
+impl From<str::Utf8Error> for Error {
+    fn from(e: str::Utf8Error) -> Error {
+        ErrorKind::UnicodeDecode(e).into()
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Error {
+        ErrorKind::Io(e).into()
+    }
+}
 
 impl Into<Error> for ErrorKind {
     fn into(self) -> Error {
@@ -23,8 +37,10 @@ impl Into<Error> for ErrorKind {
 impl Error {
     pub fn get_error_code(&self) -> c_uint {
         match self.kind {
-            ErrorKind::InternalError => 1,
-            ErrorKind::OddError => 2,
+            ErrorKind::Internal => 1,
+            ErrorKind::UnicodeDecode(_) => 2,
+            ErrorKind::RootNotDir => 3,
+            ErrorKind::Io(_) => 4,
         }
     }
 }

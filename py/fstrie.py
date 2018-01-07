@@ -5,22 +5,22 @@ from cffi import FFI
 _ffi = FFI()
 _ffi.cdef("""
 /* From https://youtu.be/zmtHaZG7pPc?t=22m19s */
-typedef void lsm_view_t;
-typedef struct lsm_error_s {
+typedef void fstrie_db_t;
+
+struct fstrie_error {
     char *message;
     int failed;
     int code;
-} lsm_error_t;
+};
 
 void fstrie_init();
 
-char *lsm_view_dump_memdb(const lsm_view_t *view,
-                          unsigned int *len_out,
-                          int with_source_contents,
-                          int with_names,
-                          lsm_error_t *err);
+fstrie_db_t *fstrie_load(const char *root, struct fstrie_error *);
+void fstrie_unload(fstrie_db_t *, struct fstrie_error *);
+char **fstrie_lookup(fstrie_db_t *, const char *key, struct fstrie_error *);
 
 void fstrie_free(char *);
+void fstrie_free_list(char **);
 """)
 _lib = _ffi.dlopen(os.path.join(
     os.path.dirname(__file__), '../target/debug/libfstrie.so'))
@@ -47,7 +47,7 @@ special_errors = {
 
 # From https://youtu.be/zmtHaZG7pPc?t=22m29s
 def rustcall(func, *args):
-    err = _ffi.new('lsm_error_t *')
+    err = _ffi.new('struct fstrie_error *')
     rv = func(*(args + (err,)))
     if not err[0].failed:
         return rv
@@ -66,3 +66,28 @@ def lsm_view_dump_memdb(a, b):
         return _ffi.unpack(res_ptr, len_out[0])
     finally:
         _lib.fstrie_free(res_ptr)
+
+
+class Database:
+    def __init__(self, root):
+        self._root = root
+
+    def __enter__(self):
+        self._handle = rustcall(_lib.fstrie_load, self._root.encode('utf-8'))
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        rustcall(_lib.fstrie_unload, self._handle)
+        del self._handle
+
+    def __getitem__(self, key):
+        result_ptr = rustcall(_lib.fstrie_lookup, self._handle, key.encode('utf-8'))
+        try:
+            result = []
+            i = 0
+            while result_ptr[i] != _ffi.NULL:
+                result.append(_ffi.string(result_ptr[i]).decode('utf-8', 'replace'))
+                i += 1
+            return result
+        finally:
+            _lib.fstrie_free_list(result_ptr)
