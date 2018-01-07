@@ -1,0 +1,10 @@
+[package]
+name = "fstrie"
+version = "0.1.0"
+authors = ["Mathias Rav <m@git.strova.dk>"]
+
+[dependencies]
+
+[lib]
+name = "fstrie"
+crate-type = ["cdylib"]
