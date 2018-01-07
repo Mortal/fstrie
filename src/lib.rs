@@ -1,5 +1,7 @@
 mod bridge;
+mod err;
 pub use bridge::*;
+pub use err::*;
 
 #[cfg(test)]
 mod tests {
