@@ -27,6 +27,9 @@ Prerequisites
 * Python wheel module
 * Rust and Cargo
 
+Ubuntu's Rust 1.17 is too old; use [rustup](https://www.rustup.rs/)
+to install the most recent stable Rust.
+
 Example
 -------
 
