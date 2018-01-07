@@ -1,3 +1,4 @@
+import os
 from cffi import FFI
 
 
@@ -21,7 +22,8 @@ char *lsm_view_dump_memdb(const lsm_view_t *view,
 
 void fstrie_free(char *);
 """)
-_lib = _ffi.dlopen('target/debug/libfstrie.so')
+_lib = _ffi.dlopen(os.path.join(
+    os.path.dirname(__file__), '../target/debug/libfstrie.so'))
 _lib.fstrie_init()
 
 
