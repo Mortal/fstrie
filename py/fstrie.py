@@ -35,13 +35,23 @@ class InternalError(FstrieError):
     pass
 
 
-class OddError(FstrieError):
+class UnicodeDecodeError(FstrieError):
+    pass
+
+
+class RootNotDirError(FstrieError):
+    pass
+
+
+class IOError(FstrieError):
     pass
 
 
 special_errors = {
     1: InternalError,
-    2: OddError,
+    2: UnicodeDecodeError,
+    3: RootNotDirError,
+    4: IOError,
 }
 
 

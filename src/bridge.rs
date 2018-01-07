@@ -42,6 +42,7 @@ unsafe fn set_err(err: Error, err_out: *mut CError) {
 fn silent_panic_handler(pi: &panic::PanicInfo) {
     let pl = pi.payload();
     let payload = if let Some(s) = pl.downcast_ref::<&str>() { s }
+    else if let Some(s) = pl.downcast_ref::<String>() { &s }
     else { "?" };
     let position = if let Some(p) = pi.location() {
         format!("At {}:{}: ", p.file(), p.line())
