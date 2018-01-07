@@ -39,7 +39,7 @@ class UnicodeDecodeError(FstrieError):
     pass
 
 
-class RootNotDirError(FstrieError):
+class RootDoesNotExistError(FstrieError):
     pass
 
 
@@ -50,7 +50,7 @@ class IOError(FstrieError):
 special_errors = {
     1: InternalError,
     2: UnicodeDecodeError,
-    3: RootNotDirError,
+    3: RootDoesNotExistError,
     4: IOError,
 }
 

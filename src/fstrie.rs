@@ -110,17 +110,17 @@ impl Database {
 
     fn lookup_path(&self, key: &str) -> Result<PathBuf> {
         let mut path = PathBuf::from(&self.root);
-        if !path.is_dir() {
-            return Err(ErrorKind::RootNotDir.into());
+        if !path.exists() {
+            return Err(ErrorKind::RootDoesNotExist.into());
         }
         for c in key.chars().flat_map(|c| c.to_lowercase()) {
+            if !path.is_dir() {
+                break;
+            }
             if c.is_digit(10) || c.is_lowercase() {
                 path.push(c.to_string());
             } else {
                 path.push("symbols");
-            }
-            if !path.is_dir() {
-                break;
             }
         }
         Ok(path)

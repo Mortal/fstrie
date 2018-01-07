@@ -5,7 +5,7 @@ use std::os::raw::c_uint;
 pub enum ErrorKind {
     Internal,
     UnicodeDecode(str::Utf8Error),
-    RootNotDir,
+    RootDoesNotExist,
     Io(io::Error),
 }
 
@@ -39,7 +39,7 @@ impl Error {
         match self.kind {
             ErrorKind::Internal => 1,
             ErrorKind::UnicodeDecode(_) => 2,
-            ErrorKind::RootNotDir => 3,
+            ErrorKind::RootDoesNotExist => 3,
             ErrorKind::Io(_) => 4,
         }
     }
