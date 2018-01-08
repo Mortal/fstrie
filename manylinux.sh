@@ -20,3 +20,5 @@ for wheel in dist/*-linux_*.whl; do
   auditwheel repair $wheel -w dist/
   rm $wheel
 done
+
+chown --reference=. -R .
