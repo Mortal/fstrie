@@ -9,18 +9,6 @@ pub struct CError {
     code: c_uint,
 }
 
-// From https://youtu.be/zmtHaZG7pPc?t=22m09s
-#[macro_use]
-macro_rules! export (
-    ($n:ident($($an:ident: $aty:ty),*) -> Result<$rv:ty> $body:block) => (
-        #[no_mangle]
-        pub unsafe extern "C" fn $n($($an: $aty,)* err: *mut CError) -> $rv
-        {
-            landingpad(|| $body, err)
-        }
-    );
-);
-
 static mut PANIC_INFO: Option<String> = None;
 
 // From https://youtu.be/zmtHaZG7pPc?t=21m39s
