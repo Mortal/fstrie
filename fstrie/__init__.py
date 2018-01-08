@@ -1,4 +1,4 @@
-from ._lowlevel import lib as _lib, ffi as _ffi
+from ._native import lib as _lib, ffi as _ffi
 _lib.fstrie_init()
 
 
