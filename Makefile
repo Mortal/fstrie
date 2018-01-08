@@ -1,25 +1,18 @@
 # Makefile based on https://github.com/getsentry/symbolic
-all: test
+PYTHON=python3
 
-build:
-	@cargo build --all
-
-test: cargotest pytest
-
-cargotest:
-	@cargo test --all
-
-pytest:
-	@pip install pytest > /dev/null
-	@pip install -v --editable py && pytest -v py
+all: wheel
 
 wheel:
-	cd py && python setup.py bdist_wheel
+	$(PYTHON) setup.py bdist_wheel
 
-sdist:
-	cd py && python setup.py sdist --format=zip
+IMAGE=quay.io/pypa/manylinux1_x86_64
 
 wheel-manylinux:
-	docker run --rm -it -v $(CURDIR):/work -w /work/py $(IMAGE) sh manylinux.sh
+	d=`mktemp --tmpdir -d manylinux.XXXXXX` && ( \
+	  git archive HEAD | tar -x -C $$d && \
+	docker run --rm -it -v $$d:/work -w /work $(IMAGE) sh manylinux.sh && \
+	cp $$d/dist/*.whl -t dist ) ; \
+	$(RM) -r $$d
 
-.PHONY: all doc test docker wheel sdist wheel-manylinux
+.PHONY: all wheel wheel-manylinux
