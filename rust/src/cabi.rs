@@ -4,6 +4,11 @@ use std::ffi::CStr;
 use fstrie::Database;
 use bridge::*;
 
+#[no_mangle]
+pub unsafe extern "C" fn fstrie_init() {
+    set_panic_hook();
+}
+
 // From https://youtu.be/zmtHaZG7pPc?t=22m09s
 #[macro_use]
 macro_rules! export (
