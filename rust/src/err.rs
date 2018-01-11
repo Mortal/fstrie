@@ -1,5 +1,6 @@
 use std::{result, fmt, str, io};
 use std::os::raw::c_uint;
+use bridge::CError;
 
 #[derive(Debug)]
 pub enum ErrorKind {
@@ -34,20 +35,20 @@ impl Into<Error> for ErrorKind {
     }
 }
 
-impl Error {
-    pub fn get_error_code(&self) -> c_uint {
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Defer to Debug
+        write!(f, "{:?}", self)
+    }
+}
+
+impl CError for Error {
+    fn get_error_code(&self) -> c_uint {
         match self.kind {
             ErrorKind::Internal => 1,
             ErrorKind::UnicodeDecode(_) => 2,
             ErrorKind::RootDoesNotExist => 3,
             ErrorKind::Io(_) => 4,
         }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Defer to Debug
-        write!(f, "{:?}", self)
     }
 }

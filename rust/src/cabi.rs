@@ -3,23 +3,12 @@ use std::os::raw::c_int;
 use std::ffi::CStr;
 use fstrie::Database;
 use bridge::*;
+use err::Result;
 
 #[no_mangle]
 pub unsafe extern "C" fn fstrie_init() {
     set_panic_hook();
 }
-
-// From https://youtu.be/zmtHaZG7pPc?t=22m09s
-#[macro_use]
-macro_rules! export (
-    ($n:ident($($an:ident: $aty:ty),*) -> Result<$rv:ty> $body:block) => (
-        #[no_mangle]
-        pub unsafe extern "C" fn $n($($an: $aty,)* err: *mut CError) -> $rv
-        {
-            landingpad(|| $body, err)
-        }
-    );
-);
 
 export!(fstrie_free(buf: *mut u8) -> Result<c_int> {
     Box::from_raw(buf);

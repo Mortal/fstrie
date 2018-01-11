@@ -1,9 +1,27 @@
-use std::{panic, mem};
+use std::{panic, mem, fmt};
 use std::os::raw::c_uint;
-use err::{Error, ErrorKind, Result};
+
+pub trait CError: fmt::Display {
+    fn get_error_code(&self) -> c_uint;
+}
+
+struct PanicError();
+
+impl fmt::Display for PanicError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match unsafe {&PANIC_INFO} {
+            &Some(ref s) => write!(f, "{}", s),
+            &None => write!(f, "no panic info"),
+        }
+    }
+}
+
+impl CError for PanicError {
+    fn get_error_code(&self) -> c_uint { 0 }
+}
 
 #[repr(C)]
-pub struct CError {
+pub struct NativeError {
     message: *mut u8,
     failed: c_uint,
     code: c_uint,
@@ -32,19 +50,11 @@ pub fn set_panic_hook() {
 }
 
 // From https://youtu.be/zmtHaZG7pPc?t=21m39s
-unsafe fn set_err(err: Error, err_out: *mut CError) {
+unsafe fn set_err<E: CError>(err: E, err_out: *mut NativeError) {
     if err_out.is_null() {
         return;
     }
-    let s = match err.kind {
-        ErrorKind::Internal => {
-            match &PANIC_INFO {
-                &Some(ref s) => format!("{}\x00", s),
-                &None => "no panic info\x00".to_owned(),
-            }
-        },
-        _ => format!("{}\x00", err),
-    };
+    let s = format!("{}\x00", err);
     (*err_out).message = Box::into_raw(s.into_boxed_str()) as *mut u8;
     (*err_out).code = err.get_error_code();
     (*err_out).failed = 1;
@@ -52,13 +62,25 @@ unsafe fn set_err(err: Error, err_out: *mut CError) {
 // End from
 
 // From https://youtu.be/zmtHaZG7pPc?t=21m54s
-pub unsafe fn landingpad<F: FnOnce() -> Result<T> + panic::UnwindSafe, T>(
-    f: F, err_out: *mut CError) -> T
+pub unsafe fn landingpad<F: FnOnce() -> Result<T, E> + panic::UnwindSafe, T, E: CError>(
+    f: F, err_out: *mut NativeError) -> T
 {
     if let Ok(rv) = panic::catch_unwind(f) {
         rv.map_err(|err| set_err(err, err_out)).unwrap_or(mem::zeroed())
     } else {
-        set_err(ErrorKind::Internal.into(), err_out);
+        set_err(PanicError(), err_out);
         mem::zeroed()
     }
 }
+
+// From https://youtu.be/zmtHaZG7pPc?t=22m09s
+#[macro_use]
+macro_rules! export (
+    ($n:ident($($an:ident: $aty:ty),*) -> Result<$rv:ty> $body:block) => (
+        #[no_mangle]
+        pub unsafe extern "C" fn $n($($an: $aty,)* err: *mut NativeError) -> $rv
+        {
+            landingpad(|| { let e: Result<$rv> = $body; e }, err)
+        }
+    );
+);
