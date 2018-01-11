@@ -3,8 +3,8 @@ PYTHON=python3
 
 all: wheel
 
-install: wheel
-	pip install --user -U dist/fstrie-0.1.0-py2.py3-none-manylinux1_x86_64.whl
+wheel-install: wheel
+	pip install --user -U dist/fstrie-0.1.0-py2.py3-none-linux_x86_64.whl
 
 wheel:
 	$(PYTHON) setup.py bdist_wheel
