@@ -50,7 +50,7 @@ pub fn set_panic_hook() {
 }
 
 // From https://youtu.be/zmtHaZG7pPc?t=21m39s
-unsafe fn set_err<E: CError>(err: E, err_out: *mut NativeError) {
+unsafe fn set_err(err: &CError, err_out: *mut NativeError) {
     if err_out.is_null() {
         return;
     }
@@ -66,9 +66,9 @@ pub unsafe fn landingpad<F: FnOnce() -> Result<T, E> + panic::UnwindSafe, T, E: 
     f: F, err_out: *mut NativeError) -> T
 {
     if let Ok(rv) = panic::catch_unwind(f) {
-        rv.map_err(|err| set_err(err, err_out)).unwrap_or(mem::zeroed())
+        rv.map_err(|err| set_err(&err, err_out)).unwrap_or(mem::zeroed())
     } else {
-        set_err(PanicError(), err_out);
+        set_err(&PanicError(), err_out);
         mem::zeroed()
     }
 }
