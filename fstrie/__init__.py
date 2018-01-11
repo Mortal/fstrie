@@ -1,12 +1,9 @@
 from ._native import lib as _lib, ffi as _ffi
+from ._bridge import rustcall as _rustcall, special_errors as _special_errors
 _lib.fstrie_init()
 
 
 class FstrieError(Exception):
-    pass
-
-
-class InternalError(FstrieError):
     pass
 
 
@@ -22,26 +19,11 @@ class IOError(FstrieError):
     pass
 
 
-_special_errors = {
-    1: InternalError,
-    2: UnicodeDecodeError,
-    3: RootDoesNotExistError,
-    4: IOError,
-}
-
-
-# From https://youtu.be/zmtHaZG7pPc?t=22m29s
-def _rustcall(func, *args):
-    err = _ffi.new('struct fstrie_error *')
-    rv = func(*(args + (err,)))
-    if not err[0].failed:
-        return rv
-    try:
-        exc_class = _special_errors.get(err[0].code, FstrieError)
-        exc = exc_class(_ffi.string(err[0].message).decode('utf-8', 'replace'))
-    finally:
-        _lib.fstrie_free(err[0].message)
-    raise exc
+_special_errors.update({
+    1: UnicodeDecodeError,
+    2: RootDoesNotExistError,
+    3: IOError,
+})
 
 
 class Database:

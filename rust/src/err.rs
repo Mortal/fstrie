@@ -4,7 +4,6 @@ use bridge::CError;
 
 #[derive(Debug)]
 pub enum ErrorKind {
-    Internal,
     UnicodeDecode(str::Utf8Error),
     RootDoesNotExist,
     Io(io::Error),
@@ -45,10 +44,9 @@ impl fmt::Display for Error {
 impl CError for Error {
     fn get_error_code(&self) -> c_uint {
         match self.kind {
-            ErrorKind::Internal => 1,
-            ErrorKind::UnicodeDecode(_) => 2,
-            ErrorKind::RootDoesNotExist => 3,
-            ErrorKind::Io(_) => 4,
+            ErrorKind::UnicodeDecode(_) => 1,
+            ErrorKind::RootDoesNotExist => 2,
+            ErrorKind::Io(_) => 3,
         }
     }
 }
