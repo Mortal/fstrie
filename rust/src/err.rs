@@ -36,8 +36,11 @@ impl Into<Error> for ErrorKind {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Defer to Debug
-        write!(f, "{:?}", self)
+        match self.kind {
+            ErrorKind::UnicodeDecode(ref e) => write!(f, "{}", e),
+            ErrorKind::RootDoesNotExist => write!(f, "Root does not exist."),
+            ErrorKind::Io(ref e) => write!(f, "{}", e),
+        }
     }
 }
 
