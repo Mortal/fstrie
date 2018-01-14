@@ -1,5 +1,5 @@
 use std::{panic, mem, fmt};
-use std::os::raw::c_uint;
+use std::os::raw::{c_uint, c_char};
 
 pub trait CError: fmt::Display {
     fn get_error_code(&self) -> c_uint;
@@ -22,7 +22,7 @@ impl CError for PanicError {
 
 #[repr(C)]
 pub struct NativeError {
-    message: *mut u8,
+    message: *const c_char,
     failed: c_uint,
     code: c_uint,
 }
@@ -55,7 +55,7 @@ unsafe fn set_err(err: &CError, err_out: *mut NativeError) {
         return;
     }
     let s = format!("{}\x00", err);
-    (*err_out).message = Box::into_raw(s.into_boxed_str()) as *mut u8;
+    (*err_out).message = Box::into_raw(s.into_boxed_str()) as *mut c_char;
     (*err_out).code = err.get_error_code();
     (*err_out).failed = 1;
 }

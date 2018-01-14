@@ -1,5 +1,6 @@
 use std::{result, fmt, str, io};
 use std::os::raw::c_uint;
+use std::ffi;
 use bridge::CError;
 
 #[derive(Debug)]
@@ -7,6 +8,7 @@ pub enum ErrorKind {
     UnicodeDecode(str::Utf8Error),
     RootDoesNotExist,
     Io(io::Error),
+    Nul(ffi::NulError),
 }
 
 #[derive(Debug)]
@@ -28,6 +30,12 @@ impl From<io::Error> for Error {
     }
 }
 
+impl From<ffi::NulError> for Error {
+    fn from(e: ffi::NulError) -> Error {
+        ErrorKind::Nul(e).into()
+    }
+}
+
 impl Into<Error> for ErrorKind {
     fn into(self) -> Error {
         Error { kind: self }
@@ -40,6 +48,7 @@ impl fmt::Display for Error {
             ErrorKind::UnicodeDecode(ref e) => write!(f, "{}", e),
             ErrorKind::RootDoesNotExist => write!(f, "Root does not exist."),
             ErrorKind::Io(ref e) => write!(f, "{}", e),
+            ErrorKind::Nul(_) => write!(f, "Result contains NUL bytes."),
         }
     }
 }
@@ -50,6 +59,7 @@ impl CError for Error {
             ErrorKind::UnicodeDecode(_) => 1,
             ErrorKind::RootDoesNotExist => 2,
             ErrorKind::Io(_) => 3,
+            ErrorKind::Nul(_) => 4,
         }
     }
 }
