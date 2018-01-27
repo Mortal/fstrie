@@ -1,10 +1,11 @@
 # Makefile based on https://github.com/getsentry/symbolic
 PYTHON=python3
+VERSION='0.1.1'
 
 all: wheel
 
 wheel-install: wheel
-	pip install --user -U dist/fstrie-0.1.0-py2.py3-none-linux_x86_64.whl
+	pip install --user -U dist/fstrie-$(VERSION)-py2.py3-none-linux_x86_64.whl
 
 wheel:
 	$(PYTHON) setup.py bdist_wheel

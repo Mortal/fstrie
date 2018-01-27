@@ -2,6 +2,9 @@
 from setuptools import setup
 
 
+VERSION = '0.1.1'
+
+
 def build_native(spec):
     build = spec.add_external_build(
         cmd=['cargo', 'build', '--release'],
@@ -17,7 +20,7 @@ def build_native(spec):
 
 setup(
     name='fstrie',
-    version='0.1.0',
+    version=VERSION,
     packages=['fstrie'],
     author='Mathias Rav',
     license='GPL3+',

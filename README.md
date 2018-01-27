@@ -35,7 +35,7 @@ Example
 -------
 
 ```
-$ pip install --user https://github.com/Mortal/fstrie/releases/download/v0.1.0/fstrie-0.1.0-py2.py3-none-manylinux1_x86_64.whl
+$ pip install --user https://github.com/Mortal/fstrie/releases/download/v0.1.1/fstrie-0.1.1-py2.py3-none-manylinux1_x86_64.whl
 $ sort /etc/passwd > passwd.txt
 $ python -m fstrie passwd.txt nobody
 x:99:99:nobody:/:/usr/bin/nologin
