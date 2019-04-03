@@ -1,6 +1,6 @@
 # Makefile based on https://github.com/getsentry/symbolic
 PYTHON=python3
-VERSION='0.1.1'
+VERSION='1.0.0'
 
 all: wheel
 

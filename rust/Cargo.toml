@@ -1,6 +1,6 @@
 [package]
 name = "fstrie"
-version = "0.1.1"
+version = "1.0.0"
 authors = ["Mathias Rav <m@git.strova.dk>"]
 
 [dependencies]
