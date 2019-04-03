@@ -1,5 +1,9 @@
 from ._native import lib as _lib, ffi as _ffi
-from ._bridge import rustcall as _rustcall, special_errors as _special_errors
+from . import _bridge
+
+
+__all__ = ["FstrieError", "Database"]
+
 _lib.fstrie_init()
 
 
@@ -19,11 +23,15 @@ class IOError(FstrieError):
     pass
 
 
-_special_errors.update({
+_special_errors = {
     1: UnicodeDecodeError,
     2: RootDoesNotExistError,
     3: IOError,
-})
+}
+
+_rustcall = _bridge.make_rustcall(
+    "struct fstrie_error *", _lib.fstrie_free, _special_errors, _ffi
+)
 
 
 class Database:
