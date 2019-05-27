@@ -17,7 +17,7 @@ export!(fstrie_free(buf: *mut c_char) -> Result<c_int> {
 
 export!(fstrie_free_list(buf: *mut *mut c_char) -> Result<c_int> {
     let mut i = 0;
-    while *buf.offset(i) != ptr::null_mut() {
+    while !buf.offset(i).is_null() {
         CString::from_raw(*buf.offset(i));
         i += 1;
     }

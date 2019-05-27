@@ -22,12 +22,12 @@ impl BlockSearcher {
         let mut buf = Vec::new();
         buf.resize(block_size, b'\x00');
         let mut res = Self {
-            file: file,
-            nbytes: nbytes,
-            block_size: block_size,
+            file,
+            nbytes,
+            block_size,
             lo: 0,
             hi: 0,
-            buf: buf,
+            buf,
         };
         res.hi = res.nblocks();
         Ok(res)

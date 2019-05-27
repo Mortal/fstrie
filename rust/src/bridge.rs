@@ -9,9 +9,9 @@ struct PanicError();
 
 impl fmt::Display for PanicError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match unsafe {&PANIC_INFO} {
-            &Some(ref s) => write!(f, "{}", s),
-            &None => write!(f, "no panic info"),
+        match *unsafe {&PANIC_INFO} {
+            Some(ref s) => write!(f, "{}", s),
+            None => write!(f, "no panic info"),
         }
     }
 }
@@ -66,7 +66,7 @@ pub unsafe fn landingpad<F: FnOnce() -> Result<T, E> + panic::UnwindSafe, T, E: 
     f: F, err_out: *mut NativeError) -> T
 {
     if let Ok(rv) = panic::catch_unwind(f) {
-        rv.map_err(|err| set_err(&err, err_out)).unwrap_or(mem::zeroed())
+        rv.map_err(|err| set_err(&err, err_out)).unwrap_or_else(|_| mem::zeroed())
     } else {
         set_err(&PanicError(), err_out);
         mem::zeroed()
